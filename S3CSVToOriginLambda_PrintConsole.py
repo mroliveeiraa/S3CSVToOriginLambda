@@ -92,3 +92,45 @@ def lambda_handler(event, context):
         }
 
     return response
+
+
+---------------------------------
+
+import boto3
+import logging
+
+s3_client = boto3.client('s3')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+def lambda_handler(event, context):
+    try:
+        # Nome do arquivo e pasta no bucket S3
+        folder_name = 'site'
+        file_name = 'XPTO.csv'
+        bucket_name = 'nomeBucket'
+        
+        # Imprimir informações sobre o início do processamento
+        logger.info("Iniciando acesso ao arquivo %s/%s no bucket %s", folder_name, file_name, bucket_name)
+        
+        # Fazer o download do arquivo .csv do bucket S3
+        logger.info("Baixando o arquivo %s/%s...", folder_name, file_name)
+        response = s3_client.get_object(Bucket=bucket_name, Key=f'{folder_name}/{file_name}')
+        file_content = response['Body'].read().decode('utf-8')
+        
+        # Imprimir informações sobre o sucesso do download
+        logger.info("Download do arquivo %s/%s concluído com sucesso", folder_name, file_name)
+        
+        # Imprimir o conteúdo do arquivo
+        logger.info("Conteúdo do arquivo:\n%s", file_content)
+        
+        # Restante do código...
+    except Exception as e:
+        logger.error("Erro ao processar o arquivo %s/%s: %s", folder_name, file_name, str(e))
+        response = {
+            'status': '500',
+            'statusDescription': 'Internal Server Error'
+        }
+
+    return response
+
