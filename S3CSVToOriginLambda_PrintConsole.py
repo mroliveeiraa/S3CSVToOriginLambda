@@ -134,3 +134,64 @@ def lambda_handler(event, context):
 
     return response
 
+
+
+
+
+
+
+
+
+
+
+-------------------111-1-----------
+
+import json
+import logging
+import os
+import urllib.parse
+import boto3
+from botocore.exceptions import NoCredentialsError
+
+# Configurar o registro de logs
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+def lambda_handler(event, context):
+    # Extrair informações da solicitação do CloudFront
+    request = event['Records'][0]['cf']['request']
+    s3_bucket = 'xptoNomeBucket'
+    s3_key = 'xptoSite/' + request['uri']  # Caminho completo do arquivo .csv
+    
+    try:
+        # Inicializar o cliente S3
+        s3_client = boto3.client('s3')
+
+        # Verificar se o arquivo .csv existe no S3
+        s3_client.head_object(Bucket=s3_bucket, Key=s3_key)
+
+        # Configurar a resposta para o CloudFront
+        response = {
+            'status': '200',
+            'statusDescription': 'OK',
+            'headers': {
+                'content-type': [{'key': 'Content-Type', 'value': 'text/csv'}],
+                'content-disposition': [{'key': 'Content-Disposition', 'value': 'attachment; filename="xptoArquivo.csv"'}]
+            },
+            'body': ''
+        }
+
+        return response
+    except NoCredentialsError:
+        logger.error("As credenciais não estão configuradas corretamente.")
+        return {
+            'status': '500',
+            'statusDescription': 'Internal Server Error'
+        }
+    except Exception as e:
+        logger.error(f"Erro ao processar a solicitação: {str(e)}")
+        return {
+            'status': '404',
+            'statusDescription': 'Not Found'
+        }
+
