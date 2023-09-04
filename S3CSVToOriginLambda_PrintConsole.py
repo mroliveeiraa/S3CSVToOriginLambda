@@ -1,3 +1,25 @@
+
+{
+    "Records": [
+        {
+            "cf": {
+                "config": {
+                    "distributionDomainName": "xptoLink.com.br"
+                },
+                "request": {
+                    "uri": "/nomedoArquivo.csv"
+                }
+            }
+        }
+    ]
+}
+
+
+////////////
+
+
+
+
 import boto3
 import logging
 
