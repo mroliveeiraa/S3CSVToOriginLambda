@@ -283,3 +283,98 @@ def lambda_handler(event, context):
     }
 
 
+
+
+
+
+testes unitsrios
+
+
+
+import unittest
+from unittest.mock import Mock
+from your_lambda_module import lambda_handler  # Substitua 'your_lambda_module' pelo nome do seu módulo Lambda
+
+class TestLambdaHandler(unittest.TestCase):
+
+    def setUp(self):
+        # Configurar mocks para o cliente S3 e logger
+        self.s3_client_mock = Mock()
+        self.logger_mock = Mock()
+        
+    def test_valid_csv_request(self):
+        event = {
+            'Records': [
+                {
+                    'cf': {
+                        'request': {
+                            'uri': '/site/nomedoArquivo.csv'
+                        }
+                    }
+                }
+            ]
+        }
+
+        # Configurar o comportamento esperado para o cliente S3
+        self.s3_client_mock.get_object.return_value = {
+            'Body': {
+                'read.return_value': 'Conteúdo CSV mockado'
+            }
+        }
+
+        # Substituir o cliente S3 real pelo mock
+        lambda_handler.s3_client = self.s3_client_mock
+
+        # Configurar o logger para capturar mensagens de log
+        lambda_handler.logger = self.logger_mock
+
+        # Chamar a função Lambda com o evento de teste
+        response = lambda_handler.lambda_handler(event, None)
+
+        # Verificar se o cliente S3 foi chamado corretamente
+        self.s3_client_mock.get_object.assert_called_once_with(
+            Bucket='xptoNomeS3',
+            Key='site/nomedoArquivo.csv'
+        )
+
+        # Verificar se o logger registrou a mensagem correta
+        self.logger_mock.info.assert_called_with('Arquivo site/nomedoArquivo.csv encontrado no S3.')
+
+        # Verificar se a resposta está correta
+        self.assertEqual(response['status'], '200')
+        self.assertEqual(response['headers']['content-type'][0]['value'], 'text/csv')
+        self.assertEqual(response['body'], 'Conteúdo CSV mockado')
+
+    def test_invalid_csv_request(self):
+        event = {
+            'Records': [
+                {
+                    'cf': {
+                        'request': {
+                            'uri': '/site/arquivo_invalido.txt'
+                        }
+                    }
+                }
+            ]
+        }
+
+        # Configurar o logger para capturar mensagens de log
+        lambda_handler.logger = self.logger_mock
+
+        # Chamar a função Lambda com o evento de teste
+        response = lambda_handler.lambda_handler(event, None)
+
+        # Verificar se o logger registrou a mensagem de erro correta
+        self.logger_mock.error.assert_called_with('URL inválida ou arquivo não encontrado.')
+
+        # Verificar se a resposta está correta
+        self.assertEqual(response['status'], '404')
+        self.assertEqual(response['body'], 'Arquivo não encontrado')
+
+if __name__ == '__main__':
+    unittest.main()
+
+
+
+
+
