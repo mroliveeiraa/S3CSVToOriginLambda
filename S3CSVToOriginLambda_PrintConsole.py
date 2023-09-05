@@ -1,4 +1,84 @@
 
+
+import boto3
+from unittest.mock import Mock
+from lambda_function import lambda_handler
+
+def test_valid_csv_request():
+    event = {
+        'Records': [
+            {
+                'cf': {
+                    'request': {
+                        'uri': '/site/nomedoArquivo.csv'
+                    }
+                }
+            }
+        ]
+    }
+
+    # Configurar o comportamento esperado para o cliente S3
+    s3_client_mock = Mock()
+    s3_client_mock.get_object.return_value = {
+        'Body': {
+            'read.return_value': 'Conteúdo CSV mockado'
+        }
+    }
+    lambda_handler.s3_client = s3_client_mock
+
+    # Configurar o logger para capturar mensagens de log
+    logger_mock = Mock()
+    lambda_handler.logger = logger_mock
+
+    # Chamar a função Lambda com o evento de teste
+    response = lambda_handler(event, None)
+
+    # Verificar se o cliente S3 foi chamado corretamente
+    s3_client_mock.get_object.assert_called_once_with(
+        Bucket='xptoNomeS3',
+        Key='site/nomedoArquivo.csv'
+    )
+
+    # Verificar se o logger registrou a mensagem correta
+    logger_mock.info.assert_called_with('Arquivo site/nomedoArquivo.csv encontrado no S3.')
+
+    # Verificar se a resposta está correta
+    assert response['status'] == '200'
+    assert response['headers']['content-type'][0]['value'] == 'text/csv'
+    assert response['body'] == 'Conteúdo CSV mockado'
+
+def test_invalid_csv_request():
+    event = {
+        'Records': [
+            {
+                'cf': {
+                    'request': {
+                        'uri': '/site/arquivo_invalido.txt'
+                    }
+                }
+            }
+        ]
+    }
+
+    # Configurar o logger para capturar mensagens de log
+    logger_mock = Mock()
+    lambda_handler.logger = logger_mock
+
+    # Chamar a função Lambda com o evento de teste
+    response = lambda_handler(event, None)
+
+    # Verificar se o logger registrou a mensagem de erro correta
+    logger_mock.error.assert_called_with('URL inválida ou arquivo não encontrado.')
+
+    # Verificar se a resposta está correta
+    assert response['status'] == '404'
+    assert response['body'] == 'Arquivo não encontrado'
+
+
+
+
+
+//////////////
 {
     "Records": [
         {
