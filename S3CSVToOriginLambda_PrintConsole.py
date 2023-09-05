@@ -1,3 +1,55 @@
+
+import pytest
+import boto3
+from unittest.mock import Mock
+from lambda_function import lambda_handler
+
+# Use o fixture pytest-mock para configurar o objeto mock do boto3.client('s3')
+@pytest.fixture
+def s3_client_mock(mocker):
+    return mocker.patch('boto3.client')
+
+def test_valid_csv_request(mocker, s3_client_mock):
+    # Configurar o comportamento esperado para o cliente S3 mockado
+    s3_client_mock.return_value.get_object.return_value = {
+        'Body': {
+            'read.return_value': 'Conteúdo CSV mockado'
+        }
+    }
+
+    event = {
+        'Records': [
+            {
+                'cf': {
+                    'request': {
+                        'uri': '/site/nomedoArquivo.csv'
+                    }
+                }
+            }
+        ]
+    }
+
+    # Chamar a função Lambda com o evento de teste
+    response = lambda_handler(event, None)
+
+    # Verificar se o cliente S3 foi chamado corretamente
+    s3_client_mock.assert_called_once_with('s3')
+
+    # Verificar se o método get_object do cliente S3 foi chamado corretamente
+    s3_client_mock.return_value.get_object.assert_called_once_with(
+        Bucket='xptoNomeS3',
+        Key='site/nomedoArquivo.csv'
+    )
+
+    # Verificar se a resposta está correta
+    assert response['status'] == '200'
+    assert response['headers']['content-type'][0]['value'] == 'text/csv'
+    assert response['body'] == 'Conteúdo CSV mockado'
+
+
+/////////
+
+
 import boto3
 from unittest.mock import Mock
 from lambda_function import lambda_handler
