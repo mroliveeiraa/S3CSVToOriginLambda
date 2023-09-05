@@ -1,4 +1,32 @@
 
+
+import pytest
+from your_module import Xpto  # Importe sua classe Xpto
+
+def test_s3_method(mocker):
+    # Crie um mock para o cliente S3
+    mock_s3_client = mocker.patch('boto3.client')
+
+    # Configure o comportamento do mock para a chamada get_object
+    mock_get_object = mock_s3_client.return_value.get_object
+    mock_get_object.return_value = {'Key': 'Value'}
+
+    # Crie uma instância da classe Xpto
+    xpto = Xpto()
+
+    # Chame o método s3_method
+    response = xpto.s3_method('my_bucket', 'my_key')
+
+    # Verifique se o método foi chamado corretamente
+    mock_get_object.assert_called_once_with(Bucket='my_bucket', Key='my_key')
+
+    # Verifique o resultado do método
+    assert response == {'Key': 'Value'}
+
+
+
+
+///////
 import pytest
 import boto3
 from unittest.mock import Mock
