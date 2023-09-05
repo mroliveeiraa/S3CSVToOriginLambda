@@ -1,5 +1,97 @@
 
 
+
+
+import logging
+import re
+from unittest.mock import Mock, patch
+import pytest
+
+# Importar a função Lambda que você deseja testar (assumindo que está em um arquivo chamado lambda_function.py)
+from lambda_function import lambda_handler
+
+# Criar um logger de teste
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Definir uma função auxiliar para criar eventos de teste do CloudFront
+def create_test_event(uri):
+    return {
+        'Records': [{
+            'cf': {
+                'request': {
+                    'uri': uri
+                }
+            }
+        }]
+    }
+
+# Mock da função get_object do cliente S3
+@patch('boto3.client')
+def test_lambda_handler_with_valid_csv(mock_boto3_client):
+    # Configurar o mock para o cliente S3
+    mock_s3_client = Mock()
+    mock_boto3_client.return_value = mock_s3_client
+    
+    # Configurar o retorno simulado para get_object
+    mock_s3_client.get_object.return_value = {
+        'Body': Mock(read=Mock(return_value='CSV Content'))
+    }
+    
+    # Definir uma URL de teste
+    test_uri = '/site/test.csv'
+    
+    # Criar um evento de teste
+    event = create_test_event(test_uri)
+    
+    # Chamar a função Lambda
+    response = lambda_handler(event, None)
+    
+    # Verificar se o arquivo foi encontrado
+    assert response['status'] == '200'
+    assert response['statusDescription'] == 'OK'
+    assert response['headers']['content-type'][0]['value'] == 'text/csv'
+    assert response['body'] == 'CSV Content'
+    
+    # Verificar se o logger registrou a mensagem correta
+    assert logger.messages[0] == f'Arquivo site/test.csv encontrado no S3.'
+
+# Teste para uma URL inválida
+@patch('boto3.client')
+def test_lambda_handler_with_invalid_url(mock_boto3_client):
+    # Configurar o mock para o cliente S3
+    mock_s3_client = Mock()
+    mock_boto3_client.return_value = mock_s3_client
+    
+    # Simular uma exceção ao buscar o objeto S3 (para simular um erro)
+    mock_s3_client.get_object.side_effect = Exception('Object not found')
+    
+    # Definir uma URL inválida
+    test_uri = '/invalid-url'
+    
+    # Criar um evento de teste
+    event = create_test_event(test_uri)
+    
+    # Chamar a função Lambda
+    response = lambda_handler(event, None)
+    
+    # Verificar se o Lambda retorna um erro 404
+    assert response['status'] == '404'
+    assert response['statusDescription'] == 'Not Found'
+    assert response['headers']['content-type'][0]['value'] == 'text/plain'
+    assert response['body'] == 'Arquivo não encontrado'
+    
+    # Verificar se o logger registrou a mensagem de erro correta
+    assert logger.messages[0] == 'URL inválida ou arquivo não encontrado.'
+
+# Executar os testes com pytest
+if __name__ == '__main__':
+    pytest.main()
+
+
+
+
+/////////////:
 import pytest
 from your_module import Xpto  # Importe sua classe Xpto
 
