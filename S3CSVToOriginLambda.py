@@ -1,41 +1,69 @@
-import json
 import boto3
+import logging
+import re
+# 
+# ESSA É UMA FUNCAO AWS LAMBDA@EDEG, RESPONSAVEL POR RECEBER UMA REQUSICAO DO CLOUDFRONT
+# DEPOIS, COM BASE NA URL VAI, BUSCAR UM ARQUIVO.CSV EM UM BUCKET S3 EPECIFICO
+# DEPOIS DISSO, VAI RETORNAR PARA O CLOUDFRON O ARQUIVO NO FORMATO CSV, NO BORY DO RESPONSE PARA QUE O USUARIO FACA O DOWNLOAD
+# CASO NAO ENCONTRE O ARQUIVO VAI SER RETORNADO UMA MENSAGEM DE ERRO
 
+# OBS : LEMBRANDO QUE PARA O LAMBDA SER ACIONADO, ESSA FUNCAO DEVE SER CHAMADA ATRAVES DO lambda_handler
+
+
+# Configurar o cliente S3
 s3_client = boto3.client('s3')
 
+# Configurar o logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 def lambda_handler(event, context):
-    # Obter o nome do arquivo do parâmetro passado no URL do CloudFront
-    file_name = event['Records'][0]['cf']['request']['querystring']
-
-    # Definir o nome do bucket S3
-    bucket_name = 'seu-bucket-s3-aqui'
-
-    try:
-        # Fazer o download do arquivo .csv do bucket S3
-        response = s3_client.get_object(Bucket=bucket_name, Key=file_name)
-        file_content = response['Body'].read()
-
-        # Criar uma resposta para o CloudFront
-        response = {
-            'status': '200',
-            'statusDescription': 'OK',
-            'headers': {
-                'content-type': [{
-                    'key': 'Content-Type',
-                    'value': 'text/csv'
-                }],
-                'cache-control': [{
-                    'key': 'Cache-Control',
-                    'value': 'max-age=3600'
-                }],
-            },
-            'body': file_content,
-            'bodyEncoding': 'base64'
-        }
-    except Exception as e:
-        response = {
-            'status': '404',
-            'statusDescription': 'Not Found'
-        }
-
-    return response
+    # Obter a solicitação do CloudFront
+    request = event['Records'][0]['cf']['request']
+    uri = request['uri']
+    
+    # Extrair o nome do arquivo da URL
+    match = re.search(r'/([^/]+\.csv)$', uri)
+    
+    if match:
+        # Nome do arquivo .csv encontrado na URL
+        filename = match.group(1)
+        
+        # Nome do bucket S3 e caminho para o arquivo .csv
+        s3_bucket = 'xptoNomeS3'
+        s3_key = 'site/' + filename
+        
+        try:
+            # Obter o arquivo .csv do S3
+            response = s3_client.get_object(Bucket=s3_bucket, Key=s3_key)
+            
+            # Ler o conteúdo do arquivo .csv
+            csv_content = response['Body'].read().decode('utf-8')
+            
+            # Registrar que o arquivo foi encontrado
+            logger.info(f'Arquivo {s3_key} encontrado no S3.')
+            
+            # Configurar a resposta para o CloudFront
+            return {
+                'status': '200',
+                'statusDescription': 'OK',
+                'headers': {
+                    'content-type': [{'key': 'Content-Type', 'value': 'text/csv'}],
+                    'content-disposition': [{'key': 'Content-Disposition', 'value': f'attachment; filename="{filename}"'}]
+                },
+                'body': csv_content
+            }
+        except Exception as e:
+            # Registrar erros
+            logger.error(f'Erro ao buscar o arquivo {s3_key} no S3: {str(e)}')
+    
+    # Se a URL não corresponder ou ocorrer um erro, retornar um erro 404
+    logger.error('URL inválida ou arquivo não encontrado.')
+    return {
+        'status': '404',
+        'statusDescription': 'Not Found',
+        'headers': {
+            'content-type': [{'key': 'Content-Type', 'value': 'text/plain'}],
+        },
+        'body': 'Arquivo não encontrado'
+    }
