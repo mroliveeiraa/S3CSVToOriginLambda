@@ -34,3 +34,20 @@ public class XptoControllerIntegrationTest {
         // Por exemplo, verificar o status da resposta, conteúdo da resposta, etc.
     }
 }
+
+
+def constroi header (token, gateway_id, correlation_ id
+return
+"Authorization": f"Bearer (token]"
+"*x-itau-applicationID": str(uuid. uuid4 ),
+*x-itau-tenantID*: os -getenv ('TENANT") ,
+"x-itau-apikey": os. getenv ('CLIENT_ ID*),
+"y-itau-correlationID": correlation id,
+"x-apigw-api-id": gateway_id,
+"codigo-usuario": os.getenv ("APPLICATION 10°)
+}
+
+
+
+
+
