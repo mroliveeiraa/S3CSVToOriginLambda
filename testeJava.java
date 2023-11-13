@@ -1,53 +1,19 @@
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.client.TestRestTemplate.HttpClientOption;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.ResponseEntity;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import unittest
+from unittest.mock import MagicMock
+from se import post_ativacao_contratos
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class XptoControllerIntegrationTest {
+class TestPostAtivacaoContratos(unittest.TestCase):
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    def setUp(self):
+        self.mock_logger = MagicMock()
+        self.handler = lambda_handler()
+        self.handler.logger = self.mock_logger
 
-    @Test
-    public void testRequisicaoPost() {
-        // Suponhamos que você tenha uma rota /xpto no seu controlador que lida com a requisição POST
-        String url = "/xpto";
+    def test_lambda_handler(self):
+        event = {}
+        response = self.handler(event, None)
+        
+        self.mock_logger.info.assert_called_once_with(response)
 
-        // Aqui você pode configurar o cabeçalho e o payload da requisição
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        // Configurar os cabeçalhos, payload, etc.
-
-        // Executar a requisição POST
-        ResponseEntity<String> responseEntity = restTemplate.exchange(
-            url, 
-            HttpMethod.POST, 
-            new HttpEntity<>("seu_payload_aqui", headers), 
-            String.class);
-
-        // Adicione as asserções aqui para verificar o comportamento esperado
-        // Por exemplo, verificar o status da resposta, conteúdo da resposta, etc.
-    }
-}
-
-
-def constroi header (token, gateway_id, correlation_ id
-return
-"Authorization": f"Bearer (token]"
-"*x-itau-applicationID": str(uuid. uuid4 ),
-*x-itau-tenantID*: os -getenv ('TENANT") ,
-"x-itau-apikey": os. getenv ('CLIENT_ ID*),
-"y-itau-correlationID": correlation id,
-"x-apigw-api-id": gateway_id,
-"codigo-usuario": os.getenv ("APPLICATION 10°)
-}
-
-
-
-
-
+if __name__ == '__main__':
+    unittest.main()
