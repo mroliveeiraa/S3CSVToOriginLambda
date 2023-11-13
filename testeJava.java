@@ -7,9 +7,10 @@ class TestPostAtivacaoContratos(unittest.TestCase):
     def setUp(self):
         # Cria um mock para o logger
         self.mock_logger = MagicMock()
-        # Cria uma instância da função lambda_handler
+
+        # Corrige a criação da instância da função lambda_handler
         self.handler = lambda_handler
-        # Atribui o mock_logger à instância do lambda_handler
+        # Atribui o mock_logger ao logger da instância do lambda_handler
         self.handler.logger = self.mock_logger
 
     # Teste para a função lambda_handler
