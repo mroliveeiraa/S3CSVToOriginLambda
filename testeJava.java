@@ -21,7 +21,7 @@ class TestPostAtivacaoContratos(unittest.TestCase):
         # Chama a função lambda_handler com o evento e None como argumentos
         response = self.handler(event, None)
 
-        # Verifica se o método info do logger foi chamado corretamente
+        # Corrige a verificação, removendo a chamada a format e usando diretamente o objeto response
         self.mock_logger.info.assert_called_once_with(response)
 
 # Executa os testes
