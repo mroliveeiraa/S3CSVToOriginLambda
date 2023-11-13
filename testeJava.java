@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
-from src import post_ativacao_contratos
+from lambda_function import lambda_handler  # Atualiza para o nome do arquivo correto
 
 class TestPostAtivacaoContratos(unittest.TestCase):
     # Configuração inicial para os testes
@@ -8,7 +8,7 @@ class TestPostAtivacaoContratos(unittest.TestCase):
         # Cria um mock para o logger
         self.mock_logger = MagicMock()
         # Cria uma instância da função lambda_handler
-        self.handler = lambda_handler()
+        self.handler = lambda_handler
         # Atribui o mock_logger à instância do lambda_handler
         self.handler.logger = self.mock_logger
 
